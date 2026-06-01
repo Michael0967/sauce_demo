@@ -1,33 +1,23 @@
-import { test, expect } from '@playwright/test'
-import { LoginPage } from '../pages/LoginPage'
-import { InventoryPage } from '../pages/InventoryPage'
-import { CartPage } from '../pages/CartPage'
+import { test, expect } from '../fixtures/base'
 import { PASSWORD } from '../data/users'
 import { PRODUCTS } from '../data/products'
 
 const [BACKPACK, BIKE_LIGHT, BOLT_SHIRT] = PRODUCTS
 
 test.describe('Cart', () => {
-  let inventoryPage: InventoryPage
-  let cartPage: CartPage
-
-  test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    inventoryPage = new InventoryPage(page)
-    cartPage = new CartPage(page)
-
+  test.beforeEach(async ({ loginPage, inventoryPage }) => {
     await loginPage.goto()
     await loginPage.login('standard_user', PASSWORD)
     await inventoryPage.isLoaded()
   })
 
-  test('add single product shows badge count of 1', async () => {
+  test('add single product shows badge count of 1', async ({ inventoryPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     const badge = await inventoryPage.getCartBadgeCount()
     expect(badge).toBe(1)
   })
 
-  test('add multiple products shows correct badge count', async () => {
+  test('add multiple products shows correct badge count', async ({ inventoryPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     await inventoryPage.addToCart(BIKE_LIGHT)
     await inventoryPage.addToCart(BOLT_SHIRT)
@@ -36,7 +26,7 @@ test.describe('Cart', () => {
     expect(badge).toBe(3)
   })
 
-  test('remove product clears badge', async () => {
+  test('remove product clears badge', async ({ inventoryPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     const badgeAfterAdd = await inventoryPage.getCartBadgeCount()
     expect(badgeAfterAdd).toBe(1)
@@ -46,7 +36,7 @@ test.describe('Cart', () => {
     expect(badgeAfterRemove).toBe(0)
   })
 
-  test('cart page reflects added products', async () => {
+  test('cart page reflects added products', async ({ inventoryPage, cartPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     await inventoryPage.addToCart(BIKE_LIGHT)
     await inventoryPage.goToCart()
@@ -56,7 +46,7 @@ test.describe('Cart', () => {
     expect(count).toBe(2)
   })
 
-  test('remove from cart page updates count', async () => {
+  test('remove from cart page updates count', async ({ inventoryPage, cartPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     await inventoryPage.addToCart(BIKE_LIGHT)
     await inventoryPage.goToCart()
@@ -67,7 +57,7 @@ test.describe('Cart', () => {
     expect(count).toBe(1)
   })
 
-  test('continue shopping returns to inventory', async () => {
+  test('continue shopping returns to inventory', async ({ inventoryPage, cartPage }) => {
     await inventoryPage.addToCart(BACKPACK)
     await inventoryPage.goToCart()
     await cartPage.isLoaded()

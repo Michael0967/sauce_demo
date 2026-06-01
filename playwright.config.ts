@@ -10,14 +10,20 @@ export default defineConfig({
   use: {
     baseURL: 'https://www.saucedemo.com',
     trace: 'on-first-retry',
+    viewport: { width: 1280, height: 720 },
   },
   projects: [
     {
       name: 'chromium',
-      use: {
-        ...devices['Desktop Chrome'],
-        viewport: { width: 1280, height: 720 },
-      },
+      use: { ...devices['Desktop Chrome'] },
+    },
+    {
+      name: 'firefox',
+      use: { ...devices['Desktop Firefox'] },
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] },
     },
   ],
   expect: {

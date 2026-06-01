@@ -1,20 +1,15 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from '../fixtures/base'
 import AxeBuilder from '@axe-core/playwright'
-import { LoginPage } from '../pages/LoginPage'
-import { InventoryPage } from '../pages/InventoryPage'
-import { CartPage } from '../pages/CartPage'
-import { CheckoutPage } from '../pages/CheckoutPage'
 import { PASSWORD } from '../data/users'
 import { PRODUCTS } from '../data/products'
 
 const [BACKPACK] = PRODUCTS
 
 test.describe('Accessibility', () => {
-  test('login page has no critical or serious violations', async ({ page }) => {
-    const loginPage = new LoginPage(page)
+  test('login page has no critical or serious violations', async ({ loginPage }) => {
     await loginPage.goto()
 
-    const results = await new AxeBuilder({ page })
+    const results = await new AxeBuilder({ page: loginPage.page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 
@@ -25,15 +20,12 @@ test.describe('Accessibility', () => {
     expect(violations.length).toBe(0)
   })
 
-  test('inventory page has 1 known violation (sort select lacks label)', async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    const inventoryPage = new InventoryPage(page)
-
+  test('inventory page has 1 known violation (sort select lacks label)', async ({ loginPage, inventoryPage }) => {
     await loginPage.goto()
     await loginPage.login('standard_user', PASSWORD)
     await inventoryPage.isLoaded()
 
-    const results = await new AxeBuilder({ page })
+    const results = await new AxeBuilder({ page: inventoryPage.page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 
@@ -49,12 +41,7 @@ test.describe('Accessibility', () => {
     expect(violations[0].id).toBe('select-name')
   })
 
-  test('checkout step 1 has no critical or serious violations', async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    const inventoryPage = new InventoryPage(page)
-    const cartPage = new CartPage(page)
-    const checkoutPage = new CheckoutPage(page)
-
+  test('checkout step 1 has no critical or serious violations', async ({ loginPage, inventoryPage, cartPage, checkoutPage }) => {
     await loginPage.goto()
     await loginPage.login('standard_user', PASSWORD)
     await inventoryPage.isLoaded()
@@ -63,7 +50,7 @@ test.describe('Accessibility', () => {
     await cartPage.isLoaded()
     await cartPage.goToCheckout()
 
-    const results = await new AxeBuilder({ page })
+    const results = await new AxeBuilder({ page: checkoutPage.page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 

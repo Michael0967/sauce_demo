@@ -1,22 +1,15 @@
-import { test, expect } from '@playwright/test'
-import { LoginPage } from '../pages/LoginPage'
-import { InventoryPage } from '../pages/InventoryPage'
+import { test, expect } from '../fixtures/base'
 import { PASSWORD } from '../data/users'
 import { PRODUCTS } from '../data/products'
 
 test.describe('Problem User — Bug Discovery', () => {
-  let inventoryPage: InventoryPage
-
-  test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    inventoryPage = new InventoryPage(page)
-
+  test.beforeEach(async ({ loginPage, inventoryPage }) => {
     await loginPage.goto()
     await loginPage.login('problem_user', PASSWORD)
     await inventoryPage.isLoaded()
   })
 
-  test('KNOWN DEFECT: product images do not match their product names', async () => {
+  test('KNOWN DEFECT: product images do not match their product names', async ({ inventoryPage }) => {
     const imageSources = await inventoryPage.getImageSources()
     const productNames = await inventoryPage.getProductNames()
 
@@ -36,14 +29,14 @@ test.describe('Problem User — Bug Discovery', () => {
     }
   })
 
-  test('KNOWN DEFECT: product images are not unique (all show same image)', async () => {
+  test('KNOWN DEFECT: product images are not unique (all show same image)', async ({ inventoryPage }) => {
     const imageSources = await inventoryPage.getImageSources()
     const uniqueSources = new Set(imageSources)
 
     expect(uniqueSources.size).toBeGreaterThan(1)
   })
 
-  test('sort by price Low → High does not reorder items correctly', async () => {
+  test('sort by price Low → High does not reorder items correctly', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('lohi')
 
     const prices = await inventoryPage.getPrices()

@@ -1,23 +1,11 @@
-import { test, expect } from '@playwright/test'
-import { LoginPage } from '../pages/LoginPage'
-import { InventoryPage } from '../pages/InventoryPage'
-import { CartPage } from '../pages/CartPage'
-import { CheckoutPage } from '../pages/CheckoutPage'
+import { test, expect } from '../fixtures/base'
 import { PASSWORD } from '../data/users'
 import { PRODUCTS } from '../data/products'
 
 const [BACKPACK] = PRODUCTS
 
 test.describe('Checkout', () => {
-  let checkoutPage: CheckoutPage
-  let cartPage: CartPage
-
-  test.beforeEach(async ({ page }) => {
-    const loginPage = new LoginPage(page)
-    const inventoryPage = new InventoryPage(page)
-    cartPage = new CartPage(page)
-    checkoutPage = new CheckoutPage(page)
-
+  test.beforeEach(async ({ loginPage, inventoryPage, cartPage, checkoutPage }) => {
     await loginPage.goto()
     await loginPage.login('standard_user', PASSWORD)
     await inventoryPage.isLoaded()
@@ -29,7 +17,7 @@ test.describe('Checkout', () => {
   })
 
   test.describe('validation errors', () => {
-    test('shows error with empty first name', async () => {
+    test('shows error with empty first name', async ({ checkoutPage }) => {
       await checkoutPage.fillCheckoutInfo('', 'Doe', '12345')
       await checkoutPage.clickContinue()
       await checkoutPage.waitForError()
@@ -38,7 +26,7 @@ test.describe('Checkout', () => {
       expect(message).toContain('First Name is required')
     })
 
-    test('shows error with empty last name', async () => {
+    test('shows error with empty last name', async ({ checkoutPage }) => {
       await checkoutPage.fillCheckoutInfo('John', '', '12345')
       await checkoutPage.clickContinue()
       await checkoutPage.waitForError()
@@ -47,7 +35,7 @@ test.describe('Checkout', () => {
       expect(message).toContain('Last Name is required')
     })
 
-    test('shows error with empty postal code', async () => {
+    test('shows error with empty postal code', async ({ checkoutPage }) => {
       await checkoutPage.fillCheckoutInfo('John', 'Doe', '')
       await checkoutPage.clickContinue()
       await checkoutPage.waitForError()
@@ -57,12 +45,12 @@ test.describe('Checkout', () => {
     })
   })
 
-  test('cancel returns to cart', async () => {
+  test('cancel returns to cart', async ({ checkoutPage, cartPage }) => {
     await checkoutPage.clickCancel()
     await cartPage.isLoaded()
   })
 
-  test('successful checkout shows confirmation', async () => {
+  test('successful checkout shows confirmation', async ({ checkoutPage }) => {
     await checkoutPage.fillCheckoutInfo('John', 'Doe', '12345')
     await checkoutPage.clickContinue()
     await checkoutPage.goToComplete()
@@ -71,7 +59,7 @@ test.describe('Checkout', () => {
     expect(message).toBe('Thank you for your order!')
   })
 
-  test('price calculation: subtotal + tax = total', async () => {
+  test('price calculation: subtotal + tax = total', async ({ checkoutPage }) => {
     await checkoutPage.fillCheckoutInfo('John', 'Doe', '12345')
     await checkoutPage.clickContinue()
 

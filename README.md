@@ -1,28 +1,34 @@
 # SauceDemo E2E Testing
 
-End-to-end test suite for [SauceDemo](https://www.saucedemo.com/) built with **Playwright** and **TypeScript**, designed as a portfolio project demonstrating modern testing patterns.
+[![Playwright Tests](https://github.com/Michael0967/sauce_demo/actions/workflows/playwright.yml/badge.svg)](https://github.com/Michael0967/sauce_demo/actions/workflows/playwright.yml)
+
+End-to-end test suite for [SauceDemo](https://www.saucedemo.com/) built with **Playwright** and **TypeScript** — a portfolio project demonstrating professional QA patterns.
 
 ## Stack
 
 | Tool | Purpose |
 |---|---|
-| **Playwright** | Cross-browser test automation |
+| **Playwright** | Cross-browser test automation (Chromium, Firefox, WebKit) |
 | **TypeScript** | Static typing for maintainable code |
-| **Page Object Model** | Clean abstraction of UI pages |
+| **Page Object Model** | Clean abstraction of UI pages with JSDoc |
+| **axe-core** | Accessibility audit (WCAG 2.0 / 2.1) |
+| **GitHub Actions** | CI pipeline with HTML report artifact |
 
 ## Project Structure
 
 ```
 tests/
-├── data/
+├── data/              Typed fixtures
 │   ├── users.ts
 │   └── products.ts
-├── pages/
+├── fixtures/          Custom Playwright fixtures (test.extend)
+│   └── base.ts
+├── pages/             Page Object Models with JSDoc
 │   ├── LoginPage.ts
 │   ├── InventoryPage.ts
 │   ├── CartPage.ts
 │   └── CheckoutPage.ts
-└── specs/
+└── specs/             9 test specifications
     ├── login.spec.ts
     ├── login-ui.spec.ts
     ├── inventory.spec.ts
@@ -39,14 +45,14 @@ tests/
 | Module | Tests | What it validates |
 |---|---|---|
 | **Login** | 11 | 5 valid users, locked out, wrong password, empty fields, error dismissal |
-| **Login UI** | 2 | Password masking, session clear on logout (vía POM) |
-| **Inventory** | 7 | 6 items, sort Low→High (valida precios), sort High→Low, sort A→Z, sort Z→A, botón toggles Remove |
-| **Cart** | 6 | Badge count (1 / 3), remove clears badge, cart page persistencia, Continue Shopping |
-| **Checkout** | 6 | Validación campos vacíos (3), cancel, checkout exitoso, subtotal + tax = total |
-| **Performance** | 2 | standard_user \< 5s, glitch_user es más lento que standard (107ms vs 5s) |
-| **Visual** | 3 | Screenshot regression: login, login con error, inventory |
-| **Accessibility** | 3 | axe-core: login 0 violaciones, inventory (1 conocida: `select-name`), checkout 0 |
-| **Bug Discovery** | 3 | `problem_user`: imágenes rotas (`sl-404.jpg`), todas iguales, sort defectuoso |
+| **Login UI** | 2 | Password masking, session clear on logout |
+| **Inventory** | 7 | 6 items displayed, sort by price (Low→High, High→Low), sort by name (A→Z, Z→A), button toggles to Remove |
+| **Cart** | 6 | Badge count (1 / 3), remove clears badge, cart page persistence, Continue Shopping flow |
+| **Checkout** | 6 | Empty field validation (first name / last name / postal code), cancel, successful order, subtotal + tax = total |
+| **Performance** | 2 | Standard user < 5s, glitch user is slower than standard (~110ms vs ~5000ms) |
+| **Visual** | 3 | Screenshot regression: login, login with error, inventory |
+| **Accessibility** | 3 | Login page (0 violations), inventory (1 known: `select-name`), checkout step 1 (0 violations) |
+| **Bug Discovery** | 3 | `problem_user`: broken images (`sl-404.jpg`), all images identical, sort broken |
 
 ## Bug Discovery
 
@@ -84,19 +90,38 @@ npx playwright install
 
 | Command | Description |
 |---|---|
-| `npm test` | Run all tests headless |
+| `npm test` | Run all tests headless (Chromium, Firefox, WebKit) |
 | `npm run test:headed` | Run with browser visible |
 | `npm run test:ui` | Interactive Playwright UI mode |
 | `npm run report` | Open HTML report |
 
+## Visual Snapshots
+
+Snapshots are stored in `tests/specs/*-snapshots/` and versioned in git. Regenerate them when the UI changes:
+
+```bash
+npx playwright test --update-snapshots -g "Visual Regression"
+```
+
+## CI Pipeline
+
+Every push to `main` triggers a GitHub Actions workflow that:
+
+1. Installs dependencies (`npm ci`)
+2. Installs Playwright browsers with system deps
+3. Runs all 43 tests
+4. Uploads the HTML report as an artifact (30-day retention)
+
 ## Key Patterns
 
-- **Page Object Model** con JSDoc — cada POM documenta su entrada/salida
-- **Zero raw locators en tests** — toda interacción pasa por métodos del POM
-- **data-test selectors** — resilientes contra cambios de UI
-- **Data-driven testing** — fixtures tipados eliminan código duplicado
-- **Bug-first discovery** — tests que fallan intencionalmente documentando defects reales
-- **Validación financiera** — assertion `subtotal + tax = total` con `toBeCloseTo`
-- **Performance profiling** — métricas con `[PERF]` en consola, comparación de usuarios
-- **Visual regression** — `toHaveScreenshot` con `maxDiffPixelRatio: 0.02`
-- **Accessibility audit** — axe-core integrado, categorizado por impacto (critical / serious)
+- **Page Object Model** with JSDoc — each POM documents its input/output contract
+- **Zero raw locators in tests** — all interactions go through POM methods
+- **Custom Playwright fixtures** — `test.extend()` provides typed POM instances directly to test parameters
+- **`data-test` selectors** — resilient against UI changes
+- **Data-driven testing** — typed fixtures eliminate duplicated test code
+- **Bug-first discovery** — intentionally failing tests that document real defects
+- **Financial validation** — `subtotal + tax = total` assertion with `toBeCloseTo`
+- **Performance profiling** — `[PERF]` console output, user comparison
+- **Visual regression** — `toHaveScreenshot` with `maxDiffPixelRatio: 0.02`
+- **Accessibility audit** — axe-core integrated, categorized by impact (critical / serious)
+- **Cross-browser** — runs on Chromium, Firefox, and WebKit
