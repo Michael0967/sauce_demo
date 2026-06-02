@@ -31,4 +31,5 @@ export default defineConfig({
       maxDiffPixelRatio: 0.02,
     },
   },
+  snapshotPathTemplate: '{snapshotDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}',
 })

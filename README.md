@@ -40,7 +40,7 @@ tests/
     └── problem-user.spec.ts
 ```
 
-## Coverage — 43 tests
+## Coverage — 129 tests (43 scenarios × 3 browsers)
 
 | Module | Tests | What it validates |
 |---|---|---|
@@ -52,17 +52,19 @@ tests/
 | **Performance** | 2 | Standard user < 5s, glitch user is slower than standard (~110ms vs ~5000ms) |
 | **Visual** | 3 | Screenshot regression: login, login with error, inventory |
 | **Accessibility** | 3 | Login page (0 violations), inventory (1 known: `select-name`), checkout step 1 (0 violations) |
-| **Bug Discovery** | 3 | `problem_user`: broken images (`sl-404.jpg`), all images identical, sort broken |
+| **Bug Discovery** | 3 | `problem_user` with `test.fail()`: broken images (`sl-404.jpg`), all images identical, sort doesn't reorder |
 
 ## Bug Discovery
 
-### `problem_user` — 3 defects found
+### `problem_user` — 3 known defects (expected failures)
 
-| Test | Result | Evidence |
+These tests use Playwright's `test.fail()` — they **pass when the assertion fails** (confirming the bug still exists) and **fail if the bug is ever fixed** (alerting the team).
+
+| Test | Status | Evidence |
 |---|---|---|
-| Image mismatch | ❌ FAIL | All products show `sl-404.jpg` instead of their expected image |
-| Non-unique images | ❌ FAIL | All 6 product images are identical (Set.size = 1) |
-| Sort Low→High | ❌ FAIL | Prices stay in default order instead of sorting |
+| Image mismatch | ✅ Expected failure | All products show `sl-404.jpg` instead of their expected image |
+| Non-unique images | ✅ Expected failure | All 6 product images are identical (Set.size = 1) |
+| Sort Low→High | ✅ Expected failure | Prices stay in default order instead of sorting |
 
 ### SauceDemo app — 1 accessibility defect
 
@@ -97,7 +99,7 @@ npx playwright install
 
 ## Visual Snapshots
 
-Snapshots are stored in `tests/specs/*-snapshots/` and versioned in git. Regenerate them when the UI changes:
+Snapshots are stored in `tests/specs/*-snapshots/` and versioned in git. The `snapshotPathTemplate` omits the platform suffix (`{platform}`), so the same snapshots work across macOS and Linux CI. Regenerate them when the UI changes:
 
 ```bash
 npx playwright test --update-snapshots -g "Visual Regression"
@@ -109,7 +111,7 @@ Every push to `main` triggers a GitHub Actions workflow that:
 
 1. Installs dependencies (`npm ci`)
 2. Installs Playwright browsers with system deps
-3. Runs all 43 tests
+3. Runs all 129 tests (43 scenarios × Chromium, Firefox, WebKit)
 4. Uploads the HTML report as an artifact (30-day retention)
 
 ## Key Patterns
@@ -119,7 +121,7 @@ Every push to `main` triggers a GitHub Actions workflow that:
 - **Custom Playwright fixtures** — `test.extend()` provides typed POM instances directly to test parameters
 - **`data-test` selectors** — resilient against UI changes
 - **Data-driven testing** — typed fixtures eliminate duplicated test code
-- **Bug-first discovery** — intentionally failing tests that document real defects
+- **Bug-first discovery** — `test.fail()` marks known defects as expected failures; tests pass when bugs are confirmed and alert when fixed
 - **Financial validation** — `subtotal + tax = total` assertion with `toBeCloseTo`
 - **Performance profiling** — `[PERF]` console output, user comparison
 - **Visual regression** — `toHaveScreenshot` with `maxDiffPixelRatio: 0.02`

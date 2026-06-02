@@ -9,7 +9,7 @@ test.describe('Problem User — Bug Discovery', () => {
     await inventoryPage.isLoaded()
   })
 
-  test('KNOWN DEFECT: product images do not match their product names', async ({ inventoryPage }) => {
+  test.fail('KNOWN DEFECT: product images do not match their product names', async ({ inventoryPage }) => {
     const imageSources = await inventoryPage.getImageSources()
     const productNames = await inventoryPage.getProductNames()
 
@@ -29,14 +29,14 @@ test.describe('Problem User — Bug Discovery', () => {
     }
   })
 
-  test('KNOWN DEFECT: product images are not unique (all show same image)', async ({ inventoryPage }) => {
+  test.fail('KNOWN DEFECT: product images are not unique (all show same image)', async ({ inventoryPage }) => {
     const imageSources = await inventoryPage.getImageSources()
     const uniqueSources = new Set(imageSources)
 
     expect(uniqueSources.size).toBeGreaterThan(1)
   })
 
-  test('sort by price Low → High does not reorder items correctly', async ({ inventoryPage }) => {
+  test.fail('sort by price Low → High does not reorder items correctly', async ({ inventoryPage }) => {
     await inventoryPage.sortBy('lohi')
 
     const prices = await inventoryPage.getPrices()
